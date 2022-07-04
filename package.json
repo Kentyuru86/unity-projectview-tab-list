@@ -1,0 +1,7 @@
+{
+    "name": "com.kentyuru.projectview_tab_list",
+    "version": "0.1.0",
+    "displayName": "ProjectViewTabList",
+    "description": "This package is editor extention library for project view.",
+    "unity": "2019.4"
+}
