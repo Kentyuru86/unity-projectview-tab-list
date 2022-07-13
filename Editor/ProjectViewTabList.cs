@@ -67,6 +67,7 @@ public class ProjectViewTabList : EditorWindow
     [Header("Flag")]
     static bool isSynced = false;
     static bool isDebug = false;
+    static bool isShowLastOpenedAsset = false;
 
     #endregion ### Parameters ###
 
@@ -90,6 +91,7 @@ public class ProjectViewTabList : EditorWindow
 
     void Update()
     {
+        /*
         if (Selection.assetGUIDs.Length != 0)
         {
             strNowPath = Selection.assetGUIDs[0];
@@ -103,39 +105,44 @@ public class ProjectViewTabList : EditorWindow
         {
             return;
         }
+        
+        
 
-        /*
-        if (AssetDatabase.AssetPathToGUID(strNowPath) != lastOpenedAsset.guid)
-        {
-            //Debug.Log($"[変更]   s:{Selection.assetGUIDs[0]}, l: {lastOpenedAsset.guid}");
 
-            ChangeBookmarkAsset();
-        }
-        */
         if (Selection.assetGUIDs[0] != lastOpenedAsset.guid)
         {
             //Debug.Log($"[変更]   s:{Selection.assetGUIDs[0]}, l: {lastOpenedAsset.guid}");
 
             ChangeBookmarkAsset();
         }
+        */
 
-        //Debug.Log($"now d: {GetCurrentDirectory()}");
+        strNowPath = GetCurrentDirectory();
+        //string strNowGUID = AssetDatabase.AssetPathToGUID(strNowPath);
+
+        if (strNowPath.Equals("") || lastOpenedAsset == null)
+        {
+            return;
+        }
+
+        if (strNowPath != lastOpenedAsset.path)
+        {
+            ChangeBookmarkAsset();
+        }
+
     }
 
     /// <summary>
     /// Projectビューの現在の作業ディレクトリを取得する
     /// </summary>
     /// <returns></returns>
-    string GetCurrentDirectory()
+    static string GetCurrentDirectory()
     {
-        
-        var flag = BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase;
+        var flag = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance;
         var asm = Assembly.Load("UnityEditor.dll");
-        var typeProjectBrowser = asm.GetType("UnityEditor/ProjectBrowser");
-        var projectBrowserWindow = EditorWindow.GetWindow(typeProjectBrowser);
-        
+        var typeProjectBrowser = asm.GetType("UnityEditor.ProjectBrowser");
+        var projectBrowserWindow = GetWindow(typeProjectBrowser);
         return (string)typeProjectBrowser.GetMethod("GetActiveFolderPath", flag).Invoke(projectBrowserWindow, null);
-
     }
 
     #region ### assets ###
@@ -202,10 +209,10 @@ public class ProjectViewTabList : EditorWindow
     {
         
         var info = new AssetInfo();
-        info.guid = Selection.assetGUIDs[0];
-        info.path = AssetDatabase.GUIDToAssetPath(Selection.assetGUIDs[0]);
-        //info.path = strNowPath;
-        //info.guid = AssetDatabase.AssetPathToGUID(strNowPath);
+        //info.guid = Selection.assetGUIDs[0];
+        //info.path = AssetDatabase.GUIDToAssetPath(Selection.assetGUIDs[0]);
+        info.path = strNowPath;
+        info.guid = AssetDatabase.AssetPathToGUID(strNowPath);
         Object asset = AssetDatabase.LoadAssetAtPath<Object>(info.path);
         info.name = asset.name;
         info.type = asset.GetType().ToString();
@@ -287,19 +294,7 @@ public class ProjectViewTabList : EditorWindow
         {
             if (isDebug)   // デバッグ
             {
-                GUILayout.Label("Debug Mode");
-
-                GUILayout.Label($"Sync: {(isSynced ? "ON" : "off")}");
-                GUILayout.Label($"最大表示文字数: {NumOfCharactorsVisible,2}");
-                GUILayout.Label($"リストの高さ: {shortcutListCmdHeight,2}");
-
-                if (GUILayout.Button("プログラムを編集", GUILayout.Height(20)))
-                {
-                    //File.Open("./Assets/Editor/ProjectViewTabList.cs", FileMode.Open);
-                    var asset = AssetDatabase.LoadAssetAtPath<Object>("./Assets/Editor/ProjectViewTabList");
-                    AssetDatabase.OpenAsset(asset);
-
-                }
+                DrawSettingMenu();
             }
             else   // リストの表示
             {
@@ -331,6 +326,11 @@ public class ProjectViewTabList : EditorWindow
 
         GUILayout.BeginHorizontal();
         {
+            if (isShowLastOpenedAsset)
+            {
+                GUILayout.Label($"Last: {lastOpenedAsset.path}");
+            }
+            
             GUILayout.FlexibleSpace();
             
             // オプション
@@ -409,6 +409,45 @@ public class ProjectViewTabList : EditorWindow
         style.fontStyle = originalFontStyle;
         style.normal.textColor = originalTextColor;
         style.fontSize = originalFontSize;
+    }
+
+    void DrawSettingMenu()
+    {
+        GUILayout.Label("Settings");
+        GUILayout.Label($"最大表示文字数: {NumOfCharactorsVisible,2}");
+        GUILayout.Label($"リストの高さ: {shortcutListCmdHeight,2}");
+
+
+        GUILayout.Box("", GUILayout.Height(2), GUILayout.ExpandWidth(true));
+
+
+        GUILayout.Label("Debug Mode");
+
+        GUILayout.Label($"Sync: {(isSynced ? "ON" : "off")}");
+        
+        GUILayout.Label($"現在のディレクトリ：{GetCurrentDirectory()}");
+
+        GUILayout.BeginHorizontal();
+        {
+            GUILayout.Label("最後に選択したディレクトリを表示");
+            if (GUILayout.Button($"{(isShowLastOpenedAsset ? "ON" : "off")}"))
+            {
+                isShowLastOpenedAsset = !isShowLastOpenedAsset;
+            }
+        }
+        GUILayout.EndHorizontal();
+        
+
+        //GUILayout.Label($"最後に選択したディレクトリ：{AssetDatabase.GUIDToAssetPath(Selection.assetGUIDs[0])}");
+        /*
+        if (GUILayout.Button("プログラムを編集", GUILayout.Height(20)))
+        {
+            //File.Open("./Assets/Editor/ProjectViewTabList.cs", FileMode.Open);
+            var asset = AssetDatabase.LoadAssetAtPath<Object>("./Assets/Editor/ProjectViewTabList");
+            AssetDatabase.OpenAsset(asset);
+
+        }
+        */
     }
 
     #endregion ### Draw GUI ###
