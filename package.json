@@ -1,6 +1,6 @@
 {
     "name": "com.kentyuru.projectview_tab_list",
-    "version": "0.1.2",
+    "version": "0.1.3",
     "displayName": "ProjectViewTabList",
     "description": "This package is editor extention libraries that add tab function to projectview.",
     "unity": "2019.4"

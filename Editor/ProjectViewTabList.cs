@@ -72,6 +72,7 @@ public class ProjectViewTabList : EditorWindow
     static bool isSynced = false;
     static bool isDebug = false;
     static bool isShowLastOpenedAsset = false;
+    static bool isUpdateAnyTime = false;
 
     #endregion ### Parameters ###
 
@@ -103,9 +104,19 @@ public class ProjectViewTabList : EditorWindow
 
     void Update()
     {
+        if (isUpdateAnyTime)
+        {
+            UpdateTabData();
+        }
+
         
+
+    }
+
+    void UpdateTabData()
+    {
         strNowPath = GetCurrentDirectory();
-        
+
         if (strNowPath.Equals("") || lastOpenedAsset == null)
         {
             return;
@@ -116,7 +127,6 @@ public class ProjectViewTabList : EditorWindow
             ChangeBookmarkAsset();
             Repaint();
         }
-
     }
 
     /// <summary>
@@ -256,6 +266,11 @@ public class ProjectViewTabList : EditorWindow
 
     void OnGUI()
     {
+        if (!isUpdateAnyTime)
+        {
+            UpdateTabData();
+        }
+        
         // ヘッダー
         GUILayout.BeginHorizontal();
         {
@@ -436,6 +451,8 @@ public class ProjectViewTabList : EditorWindow
 
     void DrawSettingMenu()
     {
+        var nowRect = EditorGUILayout.GetControlRect();
+
         GUILayout.Label("Settings");
         GUILayout.Label($"最大表示文字数: {NumOfCharactorsVisible,2}");
         GUILayout.Label($"リストの高さ: {shortcutListCmdHeight,2}");
@@ -446,20 +463,28 @@ public class ProjectViewTabList : EditorWindow
 
         GUILayout.Label("Debug Mode");
 
+        GUILayout.Label("Rect");
+        GUILayout.Label($"W: {nowRect.width}, H: {nowRect.height}");
+
         GUILayout.Label($"Sync: {(isSynced ? "ON" : "off")}");
         
-        GUILayout.Label($"現在のディレクトリ：{GetCurrentDirectory()}");
+        GUILayout.Label($"現在のディレクトリ：");
+        GUILayout.Label(GetCurrentDirectory());
 
-        GUILayout.BeginHorizontal();
+        GUILayout.Label("▼最後に選択したディレクトリを表示");
+        if (GUILayout.Button($"{(isShowLastOpenedAsset ? "ON" : "off")}", GUILayout.Width(30)))
         {
-            GUILayout.Label("最後に選択したディレクトリを表示");
-            if (GUILayout.Button($"{(isShowLastOpenedAsset ? "ON" : "off")}"))
-            {
-                isShowLastOpenedAsset = !isShowLastOpenedAsset;
-            }
+            isShowLastOpenedAsset = !isShowLastOpenedAsset;
         }
-        GUILayout.EndHorizontal();
+
+        GUILayout.Label("▼フォーカス外でも常に更新");
+        if (GUILayout.Button($"{(isShowLastOpenedAsset ? "ON" : "off")}", GUILayout.Width(30)))
+        {
+            isUpdateAnyTime = !isUpdateAnyTime;
+        }
+
         
+
     }
 
     #endregion ### Draw GUI ###
