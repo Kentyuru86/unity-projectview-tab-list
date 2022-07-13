@@ -31,9 +31,13 @@ public class ProjectViewTabList : EditorWindow
     [Header("Cache")]
     static AssetInfo lastOpenedAsset = null;
     static string strNowPath;
+    static BindingFlags bindingFlags;
+    static System.Type typeProjectBrowser;
+    static EditorWindow projectBrowserWindow;
 
     [Header("Layout")]
-    float shortcutListCmdHeight = 25;
+    float shortcutListCmdHeight = 30;
+    float plusbuttonHeight = 20;
     /// <summary>
     /// リストに表示する最大文字数
     /// </summary>
@@ -87,39 +91,21 @@ public class ProjectViewTabList : EditorWindow
         texIconActive = Resources.Load<Texture>("icon_active");
         texIconCopy = Resources.Load<Texture>("icon_copy");
         texIconOption = Resources.Load<Texture>("icon_option");
+
+        /*
+        // プロジェクトビューの情報を取得
+        bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance;
+        var asm = Assembly.Load("UnityEditor.dll");
+        typeProjectBrowser = asm.GetType("UnityEditor.ProjectBrowser");
+        projectBrowserWindow = GetWindow(typeProjectBrowser);
+        */
     }
 
     void Update()
     {
-        /*
-        if (Selection.assetGUIDs.Length != 0)
-        {
-            strNowPath = Selection.assetGUIDs[0];
-        }
-        else
-        {
-            return;
-        }
         
-        if (strNowPath.Equals("") || lastOpenedAsset == null)
-        {
-            return;
-        }
-        
-        
-
-
-        if (Selection.assetGUIDs[0] != lastOpenedAsset.guid)
-        {
-            //Debug.Log($"[変更]   s:{Selection.assetGUIDs[0]}, l: {lastOpenedAsset.guid}");
-
-            ChangeBookmarkAsset();
-        }
-        */
-
         strNowPath = GetCurrentDirectory();
-        //string strNowGUID = AssetDatabase.AssetPathToGUID(strNowPath);
-
+        
         if (strNowPath.Equals("") || lastOpenedAsset == null)
         {
             return;
@@ -139,11 +125,14 @@ public class ProjectViewTabList : EditorWindow
     /// <returns></returns>
     static string GetCurrentDirectory()
     {
-        var flag = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance;
+        
+        bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance;
         var asm = Assembly.Load("UnityEditor.dll");
-        var typeProjectBrowser = asm.GetType("UnityEditor.ProjectBrowser");
-        var projectBrowserWindow = GetWindow(typeProjectBrowser);
-        return (string)typeProjectBrowser.GetMethod("GetActiveFolderPath", flag).Invoke(projectBrowserWindow, null);
+        typeProjectBrowser = asm.GetType("UnityEditor.ProjectBrowser");
+        
+        projectBrowserWindow = GetWindow(typeProjectBrowser);
+        
+        return (string)typeProjectBrowser.GetMethod("GetActiveFolderPath", bindingFlags).Invoke(projectBrowserWindow, null);
     }
 
     #region ### assets ###
@@ -170,6 +159,8 @@ public class ProjectViewTabList : EditorWindow
         info.name = asset.name;
         info.type = asset.GetType().ToString();
         assets.infoList.Add(info);
+
+        lastOpenedAsset = info;
     }
 
     void BookmarkAsset()
@@ -204,14 +195,20 @@ public class ProjectViewTabList : EditorWindow
     void RemoveAsset(AssetInfo info)
     {
         assets.infoList.Remove(info);
+        
+        // 現在選択中のタブを削除した場合
+        if(info == lastOpenedAsset)
+        {
+            // 一番最後尾のディレクトリを選択する
+            lastOpenedAsset = assets.infoList[assets.infoList.Count - 1];
+        }
     }
 
     void ChangeBookmarkAsset()
     {
         
         var info = new AssetInfo();
-        //info.guid = Selection.assetGUIDs[0];
-        //info.path = AssetDatabase.GUIDToAssetPath(Selection.assetGUIDs[0]);
+        
         info.path = strNowPath;
         info.guid = AssetDatabase.AssetPathToGUID(strNowPath);
         Object asset = AssetDatabase.LoadAssetAtPath<Object>(info.path);
@@ -270,19 +267,28 @@ public class ProjectViewTabList : EditorWindow
             }
 
             GUILayout.FlexibleSpace();
-
+            /*
             // タブ追加（Assets）
             content = new GUIContent("+", "タブを追加");
             if (GUILayout.Button(content, GUILayout.Width(20), GUILayout.Height(20)))
             {
                 AddAssetsTab();
             }
-
+            */
+            /*
             // タブ追加（現在ProjectViewで選択しているものを生成）
             content = new GUIContent(texIconCopy, "タブを複製");
             if (GUILayout.Button(content, GUILayout.Width(20), GUILayout.Height(20)))
             {
                 BookmarkAsset();
+            }
+            */
+
+            // オプション
+            content = new GUIContent(texIconOption, "設定を開く");
+            if (GUILayout.Button(content, GUILayout.Width(20), GUILayout.Height(20)))
+            {
+                isDebug = !isDebug;
             }
         }
         GUILayout.EndHorizontal();
@@ -312,6 +318,20 @@ public class ProjectViewTabList : EditorWindow
                     }
                     GUILayout.EndHorizontal();
                 }
+
+                // タブ追加（Assets）
+                GUILayout.BeginHorizontal();
+                {
+                    GUILayout.Space(13);
+
+                    // タブ追加ボタン
+                    var content = new GUIContent("+", "タブを追加");
+                    if (GUILayout.Button(content, GUILayout.ExpandWidth(true), GUILayout.Height(plusbuttonHeight)))
+                    {
+                        AddAssetsTab();
+                    }
+                }
+                GUILayout.EndHorizontal();
             }
             
 
@@ -334,12 +354,14 @@ public class ProjectViewTabList : EditorWindow
             
             GUILayout.FlexibleSpace();
             
+            /*
             // オプション
             var content = new GUIContent(texIconOption, "設定を開く");
             if (GUILayout.Button(content, GUILayout.Width(20), GUILayout.Height(20)))
             {
                 isDebug = !isDebug;
             }
+            */
         }
         GUILayout.EndHorizontal();
 
@@ -438,17 +460,6 @@ public class ProjectViewTabList : EditorWindow
         }
         GUILayout.EndHorizontal();
         
-
-        //GUILayout.Label($"最後に選択したディレクトリ：{AssetDatabase.GUIDToAssetPath(Selection.assetGUIDs[0])}");
-        /*
-        if (GUILayout.Button("プログラムを編集", GUILayout.Height(20)))
-        {
-            //File.Open("./Assets/Editor/ProjectViewTabList.cs", FileMode.Open);
-            var asset = AssetDatabase.LoadAssetAtPath<Object>("./Assets/Editor/ProjectViewTabList");
-            AssetDatabase.OpenAsset(asset);
-
-        }
-        */
     }
 
     #endregion ### Draw GUI ###
