@@ -128,6 +128,7 @@ public class ProjectViewTabList : EditorWindow
         if (strNowPath != lastOpenedAsset.path)
         {
             ChangeBookmarkAsset();
+            Repaint();
         }
 
     }
