@@ -51,6 +51,9 @@ public class ProjectViewTabList : EditorWindow
     static Texture texIconActive;
     static Texture texIconCopy;
     static Texture texIconOption;
+    static GUIContent iconOption;
+    static GUIContent iconPlus;
+    static GUIContent iconClone;
 
     [Header("Assets")]
     [SerializeField] static AssetInfoList assetsCache = null;
@@ -91,8 +94,10 @@ public class ProjectViewTabList : EditorWindow
         texIconHome = Resources.Load<Texture>("icon_home");
         texIconActive = Resources.Load<Texture>("icon_active");
         texIconCopy = Resources.Load<Texture>("icon_copy");
-        texIconOption = Resources.Load<Texture>("icon_option");
-
+        //texIconOption = Resources.Load<Texture>("icon_option");
+        iconOption = EditorGUIUtility.IconContent("d__Popup");
+        iconClone = EditorGUIUtility.IconContent("d_winbtn_win_restore_a");
+        
         /*
         // プロジェクトビューの情報を取得
         bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance;
@@ -281,6 +286,13 @@ public class ProjectViewTabList : EditorWindow
                 BackHome();
             }
 
+            // タブ追加（現在ProjectViewで選択しているものを生成）
+            //content = new GUIContent(texIconCopy, "タブを複製");
+            if (GUILayout.Button(iconClone, GUILayout.Width(20), GUILayout.Height(20)))
+            {
+                BookmarkAsset();
+            }
+
             GUILayout.FlexibleSpace();
             /*
             // タブ追加（Assets）
@@ -300,8 +312,8 @@ public class ProjectViewTabList : EditorWindow
             */
 
             // オプション
-            content = new GUIContent(texIconOption, "設定を開く");
-            if (GUILayout.Button(content, GUILayout.Width(20), GUILayout.Height(20)))
+            //content = new GUIContent(texIconOption, "設定を開く");
+            if (GUILayout.Button(iconOption, GUILayout.Width(20), GUILayout.Height(20)))
             {
                 isDebug = !isDebug;
             }
@@ -344,6 +356,7 @@ public class ProjectViewTabList : EditorWindow
                     if (GUILayout.Button(content, GUILayout.ExpandWidth(true), GUILayout.Height(plusbuttonHeight)))
                     {
                         AddAssetsTab();
+                        BackHome();
                     }
                 }
                 GUILayout.EndHorizontal();
