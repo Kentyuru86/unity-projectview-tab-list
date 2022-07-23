@@ -227,8 +227,19 @@ public class ProjectViewTabList : EditorWindow
         info.path = strNowPath;
         info.guid = AssetDatabase.AssetPathToGUID(strNowPath);
         Object asset = AssetDatabase.LoadAssetAtPath<Object>(info.path);
-        info.name = asset.name;
-        info.type = asset.GetType().ToString();
+
+        // パスが「Packages」の時に名前でエラーが起こるので処理を分ける
+        // ※デフォルトでは「com.unity～」になる
+        if (info.path.Equals("Packages"))
+        {
+            info.name = "Packages";
+            info.type = "";
+        }
+        else
+        {
+            info.name = asset.name;
+            info.type = asset.GetType().ToString();
+        }
 
         // ファイルは登録できない
         if (!File.GetAttributes(info.path).HasFlag(FileAttributes.Directory))
@@ -491,7 +502,7 @@ public class ProjectViewTabList : EditorWindow
         }
 
         GUILayout.Label("▼フォーカス外でも常に更新");
-        if (GUILayout.Button($"{(isShowLastOpenedAsset ? "ON" : "off")}", GUILayout.Width(30)))
+        if (GUILayout.Button($"{(isUpdateAnyTime ? "ON" : "off")}", GUILayout.Width(30)))
         {
             isUpdateAnyTime = !isUpdateAnyTime;
         }
