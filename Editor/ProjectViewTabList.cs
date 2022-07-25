@@ -54,6 +54,7 @@ public class ProjectViewTabList : EditorWindow
     static GUIContent iconOption;
     static GUIContent iconPlus;
     static GUIContent iconClone;
+    static GUIContent iconHome;
 
     [Header("Assets")]
     [SerializeField] static AssetInfoList assetsCache = null;
@@ -97,6 +98,7 @@ public class ProjectViewTabList : EditorWindow
         //texIconOption = Resources.Load<Texture>("icon_option");
         iconOption = EditorGUIUtility.IconContent("d__Popup");
         iconClone = EditorGUIUtility.IconContent("d_winbtn_win_restore_a");
+        iconHome = EditorGUIUtility.IconContent("d_BuildSettings.Standalone.Small");
         
         /*
         // プロジェクトビューの情報を取得
@@ -292,7 +294,7 @@ public class ProjectViewTabList : EditorWindow
         {
             // Assetsに戻る
             var content = new GUIContent(texIconHome, "Assetsに戻る");
-            if (GUILayout.Button(content, GUILayout.Width(20), GUILayout.Height(20)))
+            if (GUILayout.Button(iconHome, GUILayout.Width(20), GUILayout.Height(20)))
             {
                 BackHome();
             }
