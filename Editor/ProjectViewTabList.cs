@@ -115,6 +115,7 @@ public class ProjectViewTabList : EditorWindow
 
     void UpdateTabData()
     {
+        
         strNowPath = GetCurrentDirectory();
 
         if (strNowPath.Equals("") || lastOpenedAsset == null)
@@ -302,22 +303,7 @@ public class ProjectViewTabList : EditorWindow
             }
 
             GUILayout.FlexibleSpace();
-            /*
-            // タブ追加（Assets）
-            content = new GUIContent("+", "タブを追加");
-            if (GUILayout.Button(content, GUILayout.Width(20), GUILayout.Height(20)))
-            {
-                AddAssetsTab();
-            }
-            */
-            /*
-            // タブ追加（現在ProjectViewで選択しているものを生成）
-            content = new GUIContent(texIconCopy, "タブを複製");
-            if (GUILayout.Button(content, GUILayout.Width(20), GUILayout.Height(20)))
-            {
-                BookmarkAsset();
-            }
-            */
+            
 
             // オプション
             //content = new GUIContent(texIconOption, "設定を開く");
@@ -412,7 +398,7 @@ public class ProjectViewTabList : EditorWindow
 
         // アセットのボタンを表示する
         {
-            DrawAssetItemButton(info);
+            isCanceled = DrawAssetItemButton(info);
         }
 
         // タブが二つ以上あるとき削除ボタンを表示する
@@ -431,7 +417,7 @@ public class ProjectViewTabList : EditorWindow
         return isCanceled;
     }
 
-    void DrawAssetItemButton(AssetInfo info)
+    bool DrawAssetItemButton(AssetInfo info)
     {
         string infoName = (info.name.Length > NumOfCharactorsVisible) ? $"{info.name.Substring(0, NumOfCharactorsVisible - 3)}..." : info.name;
 
@@ -443,6 +429,8 @@ public class ProjectViewTabList : EditorWindow
         var originalFontSize = style.fontSize;
         style.alignment = TextAnchor.MiddleLeft;
         style.fontSize = 12;
+
+        bool iscanceled = false;
 
 
         if (info == lastOpenedAsset)
@@ -466,13 +454,37 @@ public class ProjectViewTabList : EditorWindow
         float width = position.width - 30f;
         if (GUILayout.Button(content, style, GUILayout.MaxWidth(width), GUILayout.Height(shortcutListCmdHeight)))
         {
-            OpenAsset(info);
+            switch (Event.current.button)
+            {
+                case 0:   // 左クリック
+                    OpenAsset(info);
+                    break;
+                case 1:   // 右クリック
+                    GenericMenu menu = new GenericMenu();
+                    menu.AddItem(new GUIContent("Rename"), false, () => { Debug.Log("名前を変更します"); });
+                    menu.AddItem(new GUIContent("Delete"), false, () => {
+                        RemoveAsset(info);
+
+                        iscanceled = true;
+                    });
+                    menu.AddSeparator("");
+                    menu.AddItem(new GUIContent($"Path/{info.path.Replace("/", "\\")}"), false, () => { });
+                    menu.ShowAsContext();
+                    break;
+                case 2:   // ホイールクリック
+                    RemoveAsset(info);
+
+                    iscanceled = true;
+                    break;
+            }
         }
 
         style.alignment = originalAlignment;
         style.fontStyle = originalFontStyle;
         style.normal.textColor = originalTextColor;
         style.fontSize = originalFontSize;
+
+        return iscanceled;
     }
 
     void DrawSettingMenu()
