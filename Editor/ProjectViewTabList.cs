@@ -307,8 +307,8 @@ public class ProjectViewTabList : EditorWindow
             
 
             // オプション
-            //content = new GUIContent(texIconOption, "設定を開く");
-            if (GUILayout.Button(iconOption, GUILayout.Width(20), GUILayout.Height(20)))
+            content = new GUIContent($"{(isDebug?"Close":"")}",iconOption.image, "設定を開く");
+            if (GUILayout.Button(content, GUILayout.Width(isDebug?60:20), GUILayout.Height(20)))
             {
                 isDebug = !isDebug;
             }
