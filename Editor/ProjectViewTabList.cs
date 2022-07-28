@@ -228,9 +228,10 @@ public class ProjectViewTabList : EditorWindow
 
         // パスが「Packages」の時に名前でエラーが起こるので処理を分ける
         // ※デフォルトでは「com.unity～」になる
-        if (info.path.Equals("Packages"))
+        if (info.path.Contains("Packages"))
         {
-            info.name = "Packages";
+            info.name = Path.GetFileName(info.path.Replace("com.unity", "").Replace(".", "/"));
+            
             info.type = "";
         }
         else
