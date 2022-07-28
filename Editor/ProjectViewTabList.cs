@@ -11,7 +11,7 @@ public class ProjectViewTabList : EditorWindow
     #region ### Classes ###
     
     [System.Serializable]
-    class AssetInfo
+    public class AssetInfo
     {
         public string guid;
         public string path;
@@ -20,7 +20,7 @@ public class ProjectViewTabList : EditorWindow
     }
 
     [System.Serializable]
-    class AssetInfoList
+    public class AssetInfoList
     {
         public List<AssetInfo> infoList = new List<AssetInfo>();
     }
@@ -29,7 +29,7 @@ public class ProjectViewTabList : EditorWindow
     #endregion ### Classes ###
 
     [Header("Cache")]
-    static AssetInfo lastOpenedAsset = null;
+    public AssetInfo lastOpenedAsset = null;
     static string strNowPath;
     static BindingFlags bindingFlags;
     static System.Type typeProjectBrowser;
@@ -57,8 +57,8 @@ public class ProjectViewTabList : EditorWindow
     static GUIContent iconHome;
 
     [Header("Assets")]
-    [SerializeField] static AssetInfoList assetsCache = null;
-    static AssetInfoList assets
+    public AssetInfoList assetsCache = null;
+    public AssetInfoList assets
     {
         get
         {
@@ -100,13 +100,6 @@ public class ProjectViewTabList : EditorWindow
         iconClone = EditorGUIUtility.IconContent("d_winbtn_win_restore_a");
         iconHome = EditorGUIUtility.IconContent("d_BuildSettings.Standalone.Small");
         
-        /*
-        // プロジェクトビューの情報を取得
-        bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance;
-        var asm = Assembly.Load("UnityEditor.dll");
-        typeProjectBrowser = asm.GetType("UnityEditor.ProjectBrowser");
-        projectBrowserWindow = GetWindow(typeProjectBrowser);
-        */
     }
 
     void Update()
@@ -154,7 +147,7 @@ public class ProjectViewTabList : EditorWindow
 
     #region ### assets ###
 
-    static void InitializeAssets()
+    void InitializeAssets()
     {
         var info = new AssetInfo();
         info.path = "Assets";
@@ -162,6 +155,8 @@ public class ProjectViewTabList : EditorWindow
         Object asset = AssetDatabase.LoadAssetAtPath<Object>(info.path);
         info.name = asset.name;
         info.type = asset.GetType().ToString();
+
+        
         assets.infoList.Add(info);
 
         lastOpenedAsset = info;
@@ -390,7 +385,7 @@ public class ProjectViewTabList : EditorWindow
         {
             if (isShowLastOpenedAsset)
             {
-                GUILayout.Label($"Last: {lastOpenedAsset.path}");
+                GUILayout.Label($"Last: {System.IO.Path.GetFileName(lastOpenedAsset.path)}");
             }
             
             GUILayout.FlexibleSpace();
@@ -420,13 +415,18 @@ public class ProjectViewTabList : EditorWindow
             DrawAssetItemButton(info);
         }
 
-        // アセットをリストから削除するボタンを表示
-        var content = new GUIContent("×", "タブから削除");
-        if (GUILayout.Button(content, GUILayout.ExpandWidth(false), GUILayout.Height(shortcutListCmdHeight)))
+        // タブが二つ以上あるとき削除ボタンを表示する
+        if (assetsCache.infoList.Count > 1)
         {
-            RemoveAsset(info);
-            isCanceled = true;
+            // アセットをリストから削除するボタンを表示
+            var content = new GUIContent("×", "タブから削除");
+            if (GUILayout.Button(content, GUILayout.ExpandWidth(false), GUILayout.Height(shortcutListCmdHeight)))
+            {
+                RemoveAsset(info);
+                isCanceled = true;
+            }
         }
+        
 
         return isCanceled;
     }
