@@ -471,7 +471,7 @@ public class ProjectViewTabList : EditorWindow
         GUI.color = clrContent;
         
 
-        float width = position.width - 30f;
+        float width = position.width - 35f;
         if (GUILayout.Button(content, style, GUILayout.MaxWidth(width), GUILayout.Height(shortcutListCmdHeight)))
         {
             switch (Event.current.button)
