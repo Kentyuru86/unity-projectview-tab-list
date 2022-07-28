@@ -55,6 +55,7 @@ public class ProjectViewTabList : EditorWindow
     static GUIContent iconPlus;
     static GUIContent iconClone;
     static GUIContent iconHome;
+    static GUIContent iconUnity;
 
     [Header("Assets")]
     public AssetInfoList assetsCache = null;
@@ -99,7 +100,7 @@ public class ProjectViewTabList : EditorWindow
         iconOption = EditorGUIUtility.IconContent("d__Popup");
         iconClone = EditorGUIUtility.IconContent("d_winbtn_win_restore_a");
         iconHome = EditorGUIUtility.IconContent("d_BuildSettings.Standalone.Small");
-        
+        iconUnity = EditorGUIUtility.IconContent("d_UnityLogo");
     }
 
     void Update()
@@ -275,6 +276,13 @@ public class ProjectViewTabList : EditorWindow
         AssetDatabase.OpenAsset(asset);
     }
 
+    void MoveEditSceneDirectory()
+    {
+        // シーンアセット以外のアセットの処理
+        var asset = AssetDatabase.LoadAssetAtPath<Object>(System.IO.Path.GetDirectoryName(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path));
+        AssetDatabase.OpenAsset(asset);
+    }
+
     #endregion ### assets ###
 
     #region ### Draw GUI ###
@@ -290,17 +298,28 @@ public class ProjectViewTabList : EditorWindow
         GUILayout.BeginHorizontal();
         {
             // Assetsに戻る
-            var content = new GUIContent(texIconHome, "Assetsに戻る");
-            if (GUILayout.Button(iconHome, GUILayout.Width(20), GUILayout.Height(20)))
+            var content = new GUIContent(iconHome.image, "Assetsに戻る");
+            if (GUILayout.Button(content, GUILayout.Width(20), GUILayout.Height(20)))
             {
                 BackHome();
             }
 
             // タブ追加（現在ProjectViewで選択しているものを生成）
-            //content = new GUIContent(texIconCopy, "タブを複製");
-            if (GUILayout.Button(iconClone, GUILayout.Width(20), GUILayout.Height(20)))
+            content = new GUIContent(iconClone.image, "タブを複製");
+            if (GUILayout.Button(content, GUILayout.Width(20), GUILayout.Height(20)))
             {
                 BookmarkAsset();
+            }
+
+            content = new GUIContent(iconUnity.image, "現在編集中のシーンのファイルがあるディレクトリを開く");
+            // 現在編集中のシーンのファイルがあるディレクトリを開く
+            if (GUILayout.Button(content, GUILayout.Width(20), GUILayout.Height(20)))
+            {
+                Debug.Log($"path: {UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path}\ndir:{System.IO.Path.GetDirectoryName(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path)}");
+
+                MoveEditSceneDirectory();
+
+                
             }
 
             GUILayout.FlexibleSpace();
@@ -422,7 +441,7 @@ public class ProjectViewTabList : EditorWindow
     {
         string infoName = (info.name.Length > NumOfCharactorsVisible) ? $"{info.name.Substring(0, NumOfCharactorsVisible - 3)}..." : info.name;
 
-        var content = new GUIContent($"{infoName}");
+        var content = new GUIContent($"{infoName}", info.path);
         var style = GUI.skin.button;
         var originalAlignment = style.alignment;
         var originalFontStyle = style.fontStyle;
