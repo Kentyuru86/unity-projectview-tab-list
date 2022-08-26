@@ -9,7 +9,7 @@ public class ProjectViewTabList : EditorWindow
     #region ### Parameters ###
 
     #region ### Classes ###
-    
+
     [System.Serializable]
     public class AssetInfo
     {
@@ -78,6 +78,7 @@ public class ProjectViewTabList : EditorWindow
     static bool isDebug = false;
     static bool isShowLastOpenedAsset = false;
     static bool isUpdateAnyTime = false;
+    static bool isShowParentFolder = true;
 
     #endregion ### Parameters ###
 
@@ -110,13 +111,13 @@ public class ProjectViewTabList : EditorWindow
             UpdateTabData();
         }
 
-        
+
 
     }
 
     void UpdateTabData()
     {
-        
+
         strNowPath = GetCurrentDirectory();
 
         if (strNowPath.Equals("") || lastOpenedAsset == null)
@@ -137,13 +138,13 @@ public class ProjectViewTabList : EditorWindow
     /// <returns></returns>
     static string GetCurrentDirectory()
     {
-        
+
         bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance;
         var asm = Assembly.Load("UnityEditor.dll");
         typeProjectBrowser = asm.GetType("UnityEditor.ProjectBrowser");
-        
+
         projectBrowserWindow = GetWindow(typeProjectBrowser);
-        
+
         return (string)typeProjectBrowser.GetMethod("GetActiveFolderPath", bindingFlags).Invoke(projectBrowserWindow, null);
     }
 
@@ -158,7 +159,7 @@ public class ProjectViewTabList : EditorWindow
         info.name = asset.name;
         info.type = asset.GetType().ToString();
 
-        
+
         assets.infoList.Add(info);
 
         lastOpenedAsset = info;
@@ -209,9 +210,9 @@ public class ProjectViewTabList : EditorWindow
     void RemoveAsset(AssetInfo info)
     {
         assets.infoList.Remove(info);
-        
+
         // 現在選択中のタブを削除した場合
-        if(info == lastOpenedAsset)
+        if (info == lastOpenedAsset)
         {
             // 一番最後尾のディレクトリを選択する
             lastOpenedAsset = assets.infoList[assets.infoList.Count - 1];
@@ -220,9 +221,9 @@ public class ProjectViewTabList : EditorWindow
 
     void ChangeBookmarkAsset()
     {
-        
+
         var info = new AssetInfo();
-        
+
         info.path = strNowPath;
         info.guid = AssetDatabase.AssetPathToGUID(strNowPath);
         Object asset = AssetDatabase.LoadAssetAtPath<Object>(info.path);
@@ -232,7 +233,7 @@ public class ProjectViewTabList : EditorWindow
         if (info.path.Contains("Packages"))
         {
             info.name = Path.GetFileName(info.path.Replace("com.unity", "").Replace(".", "/"));
-            
+
             info.type = "";
         }
         else
@@ -249,7 +250,7 @@ public class ProjectViewTabList : EditorWindow
 
         for (int i = 0; i < assets.infoList.Count; i++)
         {
-            if(assets.infoList[i] == lastOpenedAsset)
+            if (assets.infoList[i] == lastOpenedAsset)
             {
                 assets.infoList[i] = info;
                 break;
@@ -293,49 +294,52 @@ public class ProjectViewTabList : EditorWindow
         {
             UpdateTabData();
         }
-        
+
         // ヘッダー
-        GUILayout.BeginHorizontal();
+        GUILayout.BeginHorizontal("", EditorStyles.toolbar);
         {
-            // Assetsに戻る
-            var content = new GUIContent(iconHome.image, "Assetsに戻る");
-            if (GUILayout.Button(content, GUILayout.Width(20), GUILayout.Height(20)))
+            GUIContent content;
+            if (!isDebug)
             {
-                BackHome();
+                // Assetsに戻る
+                content = new GUIContent(iconHome.image, "Assetsに戻る");
+                if (GUILayout.Button(content, EditorStyles.toolbarButton, GUILayout.Width(20), GUILayout.Height(20)))
+                {
+                    BackHome();
+                }
+
+                // タブ追加（現在ProjectViewで選択しているものを生成）
+                content = new GUIContent(iconClone.image, "タブを複製");
+                if (GUILayout.Button(content, EditorStyles.toolbarButton, GUILayout.Width(20), GUILayout.Height(20)))
+                {
+                    BookmarkAsset();
+                }
+
+                content = new GUIContent(iconUnity.image, "現在編集中のシーンのファイルがあるディレクトリを開く");
+                // 現在編集中のシーンのファイルがあるディレクトリを開く
+                if (GUILayout.Button(content, EditorStyles.toolbarButton, GUILayout.Width(20), GUILayout.Height(20)))
+                {
+                    Debug.Log($"path: {UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path}\ndir:{System.IO.Path.GetDirectoryName(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path)}");
+
+                    MoveEditSceneDirectory();
+
+
+                }
             }
 
-            // タブ追加（現在ProjectViewで選択しているものを生成）
-            content = new GUIContent(iconClone.image, "タブを複製");
-            if (GUILayout.Button(content, GUILayout.Width(20), GUILayout.Height(20)))
-            {
-                BookmarkAsset();
-            }
-
-            content = new GUIContent(iconUnity.image, "現在編集中のシーンのファイルがあるディレクトリを開く");
-            // 現在編集中のシーンのファイルがあるディレクトリを開く
-            if (GUILayout.Button(content, GUILayout.Width(20), GUILayout.Height(20)))
-            {
-                Debug.Log($"path: {UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path}\ndir:{System.IO.Path.GetDirectoryName(UnityEditor.SceneManagement.EditorSceneManager.GetActiveScene().path)}");
-
-                MoveEditSceneDirectory();
-
-                
-            }
 
             GUILayout.FlexibleSpace();
-            
+
 
             // オプション
-            content = new GUIContent($"{(isDebug?"Close":"")}",iconOption.image, "設定を開く");
-            if (GUILayout.Button(content, GUILayout.Width(isDebug?60:20), GUILayout.Height(20)))
+            content = new GUIContent($"{(isDebug ? "Close" : "")}", iconOption.image, "設定を開く");
+            if (GUILayout.Button(content, EditorStyles.toolbarButton, GUILayout.Width(isDebug ? 60 : 20), GUILayout.Height(20)))
             {
                 isDebug = !isDebug;
             }
         }
         GUILayout.EndHorizontal();
 
-        // 仕切り線
-        GUILayout.Box("", GUILayout.ExpandWidth(true), GUILayout.Height(2));
 
         // メインコンテンツの表示
         scrollView = GUILayout.BeginScrollView(scrollView);
@@ -346,7 +350,7 @@ public class ProjectViewTabList : EditorWindow
             }
             else   // リストの表示
             {
-                
+
                 foreach (var info in assets.infoList)
                 {
                     GUILayout.BeginHorizontal();
@@ -363,10 +367,10 @@ public class ProjectViewTabList : EditorWindow
                 // タブ追加（Assets）
                 GUILayout.BeginHorizontal();
                 {
-                    GUILayout.Space(13);
+                    //GUILayout.Space(13);
 
                     // タブ追加ボタン
-                    var content = new GUIContent("+", "タブを追加");
+                    var content = new GUIContent("+ Add", "タブを追加");
                     if (GUILayout.Button(content, GUILayout.ExpandWidth(true), GUILayout.Height(plusbuttonHeight)))
                     {
                         AddAssetsTab();
@@ -375,7 +379,7 @@ public class ProjectViewTabList : EditorWindow
                 }
                 GUILayout.EndHorizontal();
             }
-            
+
 
         }
         GUILayout.EndScrollView();
@@ -393,9 +397,9 @@ public class ProjectViewTabList : EditorWindow
             {
                 GUILayout.Label($"Last: {System.IO.Path.GetFileName(lastOpenedAsset.path)}");
             }
-            
+
             GUILayout.FlexibleSpace();
-            
+
             /*
             // オプション
             var content = new GUIContent(texIconOption, "設定を開く");
@@ -426,13 +430,13 @@ public class ProjectViewTabList : EditorWindow
         {
             // アセットをリストから削除するボタンを表示
             var content = new GUIContent("×", "タブから削除");
-            if (GUILayout.Button(content, GUILayout.ExpandWidth(false), GUILayout.Height(shortcutListCmdHeight)))
+            if (GUILayout.Button(content, EditorStyles.toolbarButton, GUILayout.ExpandWidth(false), GUILayout.Height(shortcutListCmdHeight)))
             {
                 RemoveAsset(info);
                 isCanceled = true;
             }
         }
-        
+
 
         return isCanceled;
     }
@@ -441,8 +445,14 @@ public class ProjectViewTabList : EditorWindow
     {
         string infoName = (info.name.Length > NumOfCharactorsVisible) ? $"{info.name.Substring(0, NumOfCharactorsVisible - 3)}..." : info.name;
 
+        // 親フォルダ名の表示
+        if (isShowParentFolder)
+        {
+            infoName += $" @{Directory.GetParent(info.path).Name}";
+        }
+
         var content = new GUIContent($"{infoName}", info.path);
-        var style = GUI.skin.button;
+        var style = EditorStyles.toolbarButton;
         var originalAlignment = style.alignment;
         var originalFontStyle = style.fontStyle;
         var originalTextColor = style.normal.textColor;
@@ -462,16 +472,15 @@ public class ProjectViewTabList : EditorWindow
         {
             style.normal.textColor = Color.gray;
         }
-        
+
         // アクティブかどうか判別するためのボックス
         Color clrContent = GUI.color;
         GUI.color = (info == lastOpenedAsset) ? Color.cyan : Color.gray;
-        GUILayout.Label(texIconActive, GUILayout.Width(5), GUILayout.Height(shortcutListCmdHeight));
-        
-        GUI.color = clrContent;
-        
+        GUILayout.Label(texIconActive, EditorStyles.toolbar, GUILayout.Width(5), GUILayout.Height(shortcutListCmdHeight));
 
-        float width = position.width - 35f;
+        GUI.color = clrContent;
+
+        float width = position.width - 25f;
         if (GUILayout.Button(content, style, GUILayout.MaxWidth(width), GUILayout.Height(shortcutListCmdHeight)))
         {
             switch (Event.current.button)
@@ -525,7 +534,7 @@ public class ProjectViewTabList : EditorWindow
         GUILayout.Label($"W: {nowRect.width}, H: {nowRect.height}");
 
         GUILayout.Label($"Sync: {(isSynced ? "ON" : "off")}");
-        
+
         GUILayout.Label($"現在のディレクトリ：");
         GUILayout.Label(GetCurrentDirectory());
 
@@ -541,7 +550,13 @@ public class ProjectViewTabList : EditorWindow
             isUpdateAnyTime = !isUpdateAnyTime;
         }
 
-        
+        GUILayout.Label("▼親フォルダ名を表示する");
+        if (GUILayout.Button($"{(isShowParentFolder ? "ON" : "off")}", GUILayout.Width(30)))
+        {
+            isShowParentFolder = !isShowParentFolder;
+        }
+
+
 
     }
 
