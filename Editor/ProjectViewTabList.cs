@@ -79,6 +79,7 @@ public class ProjectViewTabList : EditorWindow
     static bool isShowLastOpenedAsset = false;
     static bool isUpdateAnyTime = false;
     static bool isShowParentFolder = true;
+    static bool isShowDeleteButton = false;
 
     #endregion ### Parameters ###
 
@@ -163,6 +164,7 @@ public class ProjectViewTabList : EditorWindow
         assets.infoList.Add(info);
 
         lastOpenedAsset = info;
+
     }
 
     void AddAssetsTab()
@@ -389,13 +391,13 @@ public class ProjectViewTabList : EditorWindow
         GUILayout.FlexibleSpace();
 
         // 仕切り線
-        GUILayout.Box("", GUILayout.ExpandWidth(true), GUILayout.Height(2));
+        //GUILayout.Box("", GUILayout.ExpandWidth(true), GUILayout.Height(2));
 
         GUILayout.BeginHorizontal();
         {
             if (isShowLastOpenedAsset)
             {
-                GUILayout.Label($"Last: {System.IO.Path.GetFileName(lastOpenedAsset.path)}");
+                GUILayout.Label($"Last: {System.IO.Path.GetFileName(lastOpenedAsset.path)}", EditorStyles.toolbar, GUILayout.ExpandWidth(true));
             }
 
             GUILayout.FlexibleSpace();
@@ -428,13 +430,17 @@ public class ProjectViewTabList : EditorWindow
         // タブが二つ以上あるとき削除ボタンを表示する
         if (assetsCache.infoList.Count > 1)
         {
-            // アセットをリストから削除するボタンを表示
-            var content = new GUIContent("×", "タブから削除");
-            if (GUILayout.Button(content, EditorStyles.toolbarButton, GUILayout.ExpandWidth(false), GUILayout.Height(shortcutListCmdHeight)))
+            if (isShowDeleteButton)
             {
-                RemoveAsset(info);
-                isCanceled = true;
+                // アセットをリストから削除するボタンを表示
+                var content = new GUIContent("×", "タブから削除");
+                if (GUILayout.Button(content, EditorStyles.toolbarButton, GUILayout.ExpandWidth(false), GUILayout.Height(shortcutListCmdHeight)))
+                {
+                    RemoveAsset(info);
+                    isCanceled = true;
+                }
             }
+
         }
 
 
@@ -480,7 +486,7 @@ public class ProjectViewTabList : EditorWindow
 
         GUI.color = clrContent;
 
-        float width = position.width - 25f;
+        float width = isShowDeleteButton ? position.width - 25f : position.width;
         if (GUILayout.Button(content, style, GUILayout.MaxWidth(width), GUILayout.Height(shortcutListCmdHeight)))
         {
             switch (Event.current.button)
@@ -556,7 +562,11 @@ public class ProjectViewTabList : EditorWindow
             isShowParentFolder = !isShowParentFolder;
         }
 
-
+        GUILayout.Label("▼削除ボタンをタブの横に表示する");
+        if (GUILayout.Button($"{(isShowDeleteButton ? "ON" : "off")}", GUILayout.Width(30)))
+        {
+            isShowDeleteButton = !isShowDeleteButton;
+        }
 
     }
 
